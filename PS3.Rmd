@@ -1,0 +1,117 @@
+---
+title: "PS4"
+author: "Joanna Zhang"
+date: "3/02/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dendextend)
+library(ggplot2)
+library(dplyr)
+```
+
+## Performing k-Means By Hand
+### 1. Plot the observations.
+```{r}
+x <- cbind(c(1, 1, 0, 5, 6, 4), c(4, 3, 4, 1, 2, 0))
+plot(x, main = "Scatter Plot for Data Set X", xlab = "V1", ylab = "V2")
+```
+
+### 2. (5 points) Randomly assign a cluster label to each observation. Report the cluster labels for each observation and plot the results with a different color for each cluster (remember to set your seed first).
+```{r}
+set.seed(1405)
+df <- as.data.frame(x) %>% 
+  mutate(cluster = sample(2, nrow(x), replace =T))
+df %>% 
+  ggplot()+
+  geom_point(aes(V1,V2, color = as.factor(cluster)))+
+  theme_minimal()
+```
+
+### 3. (10 points) Compute the centroid for each cluster.
+```{r}
+centroids <- df %>% 
+  group_by(cluster) %>% 
+  summarize(mean_v1 = mean(V1), mean_v2 = mean(V2)) 
+knitr::kable(centroid)
+```
+
+
+### 4. (10 points) Assign each observation to the centroid to which it is closest, in terms of Euclidean distance. Report the cluster labels for each observation.
+```{r}
+get_centroids <- function(data){
+  curr_centroids <- data %>% 
+    group_by(cluster) %>% 
+    summarize(mean_v1 = mean(V1), mean_v2 = mean(V2))
+  return(curr_centroids)
+}
+
+find_new_clstr <- function(data){
+  curr_centroids <- get_centroids(data)
+  newlabel <- vector()
+  for (i in 1:nrow(data)){
+  a <- data[[1]][i]
+  b <- data[[1]][i]
+  dist1 <- sqrt((a - curr_centroids[[2]][1])^2 + (b - curr_centroids[[3]][1])^2)
+  dist2 <- sqrt((a - curr_centroids[[2]][2])^2 + (b - curr_centroids[[3]][2])^2)
+  newlabel <- append(newlabel,ifelse(dist1 < dist2, 1, 2))
+}
+data <- data %>% 
+  mutate(cluster = newlabel)  %>% 
+  select(V1, V2, cluster)
+return(data)
+}
+df<-find_new_clstr(df)
+knitr::kable(df)
+
+df %>% 
+  ggplot()+
+  geom_point(aes(V1,V2, color = as.factor(cluster)))+
+  theme_minimal()
+```
+
+
+### 5. (5 points) Repeat (3) and (4) until the answers/clusters stop changing.
+```{r}
+converge = F
+while(!converge){
+  current_clstr <- df$cluster
+  df<-find_new_clstr(df)
+  converge = all(current_clstr == df$cluster)
+}
+```
+
+
+
+### 6. (10 points) Reproduce the original plot from (1), but this time color the observations according to the clusters labels you obtained by iterating the cluster centroid calculation and assignments.
+```{r}
+df %>% 
+  ggplot()+
+  geom_point(aes(V1,V2, color = as.factor(cluster)))+
+  theme_minimal()
+```
+
+## Clustering State Legislative Professionalism
+### 1.
+```{r}
+load("Data and Codebook/legprof-components.v1.0.RData")
+legprof<-x
+```
+
+### 2. (5 points) Munge the data:
+
+a. select only the continuous features that should capture a state legislature’s level of “professionalism” (session length (total and regular), salary, and expenditures); 
+
+b. restrict the data to only include the 2009/10 legislative session for consistency; 
+
+c. omit all missing values; 
+
+d. standardize the input features; e. and anything else you think necessary to get this subset of data into workable form (hint: consider storing the state names as a separate object to be used in plotting later)
+
+```{r}
+
+```
+
