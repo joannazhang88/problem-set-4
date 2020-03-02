@@ -6,7 +6,7 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, fig.height = 4)
+knitr::opts_chunk$set(echo = TRUE, warning = F)
 library(tidyverse)
 library(dendextend)
 library(ggplot2)
@@ -14,6 +14,7 @@ library(dplyr)
 library(seriation)
 library(mixtools)
 library(plotGMM)
+library(gridExtra)
 ```
 
 ## Performing k-Means By Hand
@@ -207,76 +208,136 @@ The GMM puts 38 states in one group and 11 states in the other group.
 
 ### 7. (15 points) Compare output of all in visually useful, simple ways (e.g., present the dendrogram, plot by state cluster assignment across two features like salary and expenditures, etc.). There should be several plots of comparison and output.
 
+In this section we compare the model across three pairs of features: salary and expenditures, total session length and regular session length, total session length and expenditure.
 ```{r}
 #HC
-lp %>% 
+p1<-lp %>% 
   as.tibble() %>% 
   mutate(assignment = cutree(hc_avg, 2)) %>% 
   ggplot()+
   geom_point(aes(salary_real, expend, color = as.factor(assignment)))+
-  geom_text(aes(salary_real, expend, label = rownames(lp)), hjust = 0.3, vjust = -0.2)+
+  geom_text(aes(salary_real, expend, label = rownames(lp),color = as.factor(assignment)), hjust = 0.3, vjust = -0.2)+
   theme_minimal()+
-  labs(x = "Salary", y = "Expenditures", title = "AHC")
+  labs(x = "Salary", y = "Expenditures", color = "Cluster",title = "AHC")+
+  xlim(c(-2,5))+ylim(c(-1, 6))
 
 #kmeans
-lp %>% 
+p2<-lp %>% 
   as.tibble() %>% 
   mutate(assignment = kmeans$cluster) %>% 
   ggplot()+
   geom_point(aes(salary_real, expend, color = as.factor(assignment)))+
-  geom_text(aes(salary_real, expend, label = rownames(lp)), hjust = 0.3, vjust = -0.2)+
+  geom_text(aes(salary_real, expend, label = rownames(lp),color = as.factor(assignment)), hjust = 0.3, vjust = -0.2)+
   theme_minimal()+
-  labs(x = "Salary", y = "Expenditures", title = "Kmeans")
+  labs(x = "Salary", y = "Expenditures",color = "Cluster", title = "Kmeans")+
+  xlim(c(-2,5))+ylim(c(-1, 6))
 
 # GMM
-lp %>% 
+p3<-lp %>% 
   cbind(posterior) %>% 
   rename(assignment = component) %>% 
   ggplot()+
   geom_point(aes(salary_real, expend, color = as.factor(assignment)))+
-  geom_text(aes(salary_real, expend, label = stateabv), hjust = 0.3, vjust = -0.2)+
+  geom_text(aes(salary_real, expend, label = stateabv,color = as.factor(assignment)), hjust = 0.3, vjust = -0.2)+
   theme_minimal()+
-  labs(x = "Salary", y = "Expenditures", title = "GMM Classification")
+  labs(x = "Salary", y = "Expenditures", color = "Cluster",title = "GMM Classification")+
+  xlim(c(-2,5))+ylim(c(-1, 6))
+
 
 ```
 
 As we look at the pictures, it seems that the AHC algorithm and GMM are not producing a very good classification since the two groups have several states overlapping on each other (MA and NY for AHC, OH, IL, MA for GMM). But kmeans generates two relatively clean clusters, as there is only one state who belongs to the blue group (IL) in the middle of the red dots.
 
-Now check total session length vs regular session length.
+
 ```{r}
 #HC
-lp %>% 
+p4<- lp %>% 
   as.tibble() %>% 
   mutate(assignment = cutree(hc_avg, 2)) %>% 
   ggplot()+
   geom_point(aes(t_slength, slength, color = as.factor(assignment)))+
-  geom_text(aes(t_slength, slength, label = rownames(lp)), hjust = 0.3, vjust = -0.2)+
+  geom_text(aes(t_slength, slength, label = rownames(lp),color = as.factor(assignment)),
+            hjust = 0.3, vjust = -0.2)+
   theme_minimal()+
-  labs(x = "Regular Session Length", y = "Total Session Length", title = "AHC")
+  labs(x = "Regular Session Length", y = "Total Session Length", color = "Cluster", title = "AHC")+
+  xlim(c(-2,5))+ylim(c(-1, 6))
 
 #kmeans
-lp %>% 
+p5<- lp %>% 
   as.tibble() %>% 
   mutate(assignment = kmeans$cluster) %>% 
   ggplot()+
   geom_point(aes(t_slength, slength, color = as.factor(assignment)))+
-  geom_text(aes(t_slength, slength, label = rownames(lp)), hjust = 0.3, vjust = -0.2)+
+  geom_text(aes(t_slength, slength, label = rownames(lp),color = as.factor(assignment)), 
+            hjust = 0.3, vjust = -0.2)+
   theme_minimal()+
-  labs(x = "Regular Session Length", y = "Total Session Length", title = "Kmeans")
+  labs(x = "Regular Session Length", y = "Total Session Length", color = "Cluster",title = "Kmeans")+
+  xlim(c(-2,5))+ylim(c(-1, 6))
 
 # GMM
-lp %>% 
+p6<-lp %>% 
   cbind(posterior) %>% 
   rename(assignment = component) %>% 
   ggplot()+
   geom_point(aes(t_slength, slength, color = as.factor(assignment)))+
-  geom_text(aes(t_slength, slength, label = stateabv), hjust = 0.3, vjust = -0.2)+
+  geom_text(aes(t_slength, slength, label = stateabv,color = as.factor(assignment)), 
+            hjust = 0.3, vjust = -0.2)+
   theme_minimal()+
-  labs(x = "Regular Session Length", y = "Total Session Length", title = "GMM Classification")
+  labs(x = "Regular Session Length", y = "Total Session Length",
+       color = "Cluster", title = "GMM Classification")+
+  xlim(c(-2,5))+ylim(c(-1, 6))
 
 ```
 
+
+
+```{r}
+#HC
+p7<- lp %>% 
+  as.tibble() %>% 
+  mutate(assignment = cutree(hc_avg, 2)) %>% 
+  ggplot()+
+  geom_point(aes(t_slength, expend, color = as.factor(assignment)))+
+  geom_text(aes(t_slength, expend, label = rownames(lp),color = as.factor(assignment)), 
+            hjust = 0.3, vjust = -0.2)+
+  theme_minimal()+
+  labs(x = "Regular Session Length", y = "Expenditures", color = "Cluster",title = "AHC")+
+  xlim(c(-2,5))+ylim(c(-1, 6))
+
+#kmeans
+p8<- lp %>% 
+  as.tibble() %>% 
+  mutate(assignment = kmeans$cluster) %>% 
+  ggplot()+
+  geom_point(aes(t_slength, expend, color = as.factor(assignment)))+
+  geom_text(aes(t_slength, expend, label = rownames(lp),color = as.factor(assignment)), 
+            hjust = 0.3, vjust = -0.2)+
+  theme_minimal()+
+  labs(x = "Regular Session Length", y = "Expenditures", color = "Cluster",title = "Kmeans")+
+  xlim(c(-2,5))+ylim(c(-1, 6))
+
+# GMM
+p9<-lp %>% 
+  cbind(posterior) %>% 
+  rename(assignment = component) %>% 
+  ggplot()+
+  geom_point(aes(t_slength, expend, color = as.factor(assignment)))+
+  geom_text(aes(t_slength, expend, label = stateabv, color = as.factor(assignment)),
+            hjust = 0.3, vjust = -0.2)+
+  theme_minimal()+
+  labs(x = "Regular Session Length", y = "Expenditures",color = "Cluster",
+       title = "GMM Classification")+
+  xlim(c(-2,5))+ylim(c(-1, 6))
+grid.arrange(p1,p2,p3, p4, p5, p6, p7, p8, p9, nrow = 3, widths = c(9,9,9))
+```
+
+For salary vs. expenditures,  it seems that the AHC algorithm and GMM are not producing a very good classification since the two groups have several states overlapping on each other (MA and NY for AHC, OH, IL, MA for GMM). But kmeans generates two relatively clean clusters, as there is only one state who belongs to the blue group (IL) in the middle of the red dots.
+
 When looking at total session length and regular session length, it seems that hierarchical clustering divides the two groups with no overlapping at all. But just eyeballing the graphs is not a good way to decide which method does the best. Once we use another data set, the best model may change.
+
+For expenditures vs total session length, the three methods produce similar outputs.
+
+Overall, there is no big difference between the outputs of the three methods. Although they produce different clusters, the sizes and the shapes of the clusters are very similar.
 
 ### 8.(5 points) Select a single validation strategy (e.g., compactness via min(WSS), average silhouette width, etc.), and calculate for all three algorithms. Display and compare your results for all three algorithms you fit (hierarchical, k-means, GMM).
 
